@@ -15,9 +15,9 @@ from .serializers import (
     ChangePasswordSerializer
 )
 
-"""Регистрация нового пользователя"""
+
 class RegisterView(generics.CreateAPIView):
-    
+    """Регистрация нового пользователя"""
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
@@ -37,9 +37,9 @@ class RegisterView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
     
     
-"""Вход пользователя"""
+
 class LoginView(generics.GenericAPIView):
-    
+    """Вход пользователя"""
     serializer_class = UserLoginSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -59,9 +59,9 @@ class LoginView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
     
     
-"""Просмотр и обновление профиля"""
+
 class ProfileView(generics.RetrieveUpdateAPIView):
-    
+    """Просмотр и обновление профиля"""
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -74,9 +74,8 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return UserProfileSerializer
     
 
-"""Смена пароля"""
 class ChangePasswordView(generics.UpdateAPIView):
-    
+    """Смена пароля"""
     serializer_class = ChangePasswordSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -93,11 +92,10 @@ class ChangePasswordView(generics.UpdateAPIView):
         }, status=status.HTTP_200_OK)
     
 
-"""Выход пользователя"""
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
-    
+    """Выход пользователя"""
     try:
         refresh_token = request.data.get('refresh_token')
         if refresh_token:

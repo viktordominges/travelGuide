@@ -3,9 +3,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from .models import User
 
-"""Сериализатор для регистрации пользователя"""
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    
+    """Сериализатор для регистрации пользователя"""
     password = serializers.CharField(
         write_only=True, 
         validators=[validate_password]
@@ -32,9 +32,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
     
     
-"""Сериализатор для входа пользователя"""
+
 class UserLoginSerializer(serializers.Serializer):
-    
+    """Сериализатор для входа пользователя"""
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
@@ -64,9 +64,9 @@ class UserLoginSerializer(serializers.Serializer):
             )
             
      
-"""Сериализатор для профиля пользователя"""       
+      
 class UserProfileSerializer(serializers.ModelSerializer):
-    
+    """Сериализатор для профиля пользователя""" 
     full_name = serializers.ReadOnlyField()
     posts_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
@@ -97,9 +97,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return 0
        
        
-"""Сериализатор для обновления профиля пользователя""" 
+ 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    
+    """Сериализатор для обновления профиля пользователя"""
     class Meta:
         model = User
         fields = (
@@ -115,7 +115,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 """Сериализатор для смены пароля"""
 class ChangePasswordSerializer(serializers.Serializer):
-    
+    """Сериализатор для смены пароля"""
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(
         required=True,

@@ -5,9 +5,7 @@ from django.urls import reverse
 
 
 class Category(models.Model):
-    """
-    Модель категории для постов блога.
-    """
+    """Модель категории для постов блога."""
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
@@ -30,7 +28,6 @@ class Category(models.Model):
 
 class PostManager(models.Manager):
     """Менеджер для модели Post с дополнительными методами"""
-
     def pusblished(self):
         return self.filter(status='published')
     
@@ -57,9 +54,7 @@ class PostManager(models.Manager):
 
 
 class Post(models.Model):
-    """
-    Модель поста блога c поддержкой закрепления.
-    """
+    """Модель поста блога c поддержкой закрепления."""
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('published', 'Published'),
