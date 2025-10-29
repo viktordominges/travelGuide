@@ -206,104 +206,104 @@ def recent_posts(request):
     )
     return Response(serializer.data)
 
-# @api_view(['GET'])
-# @permission_classes([permissions.AllowAny])
-# def pinned_posts_only(request):
-#     """Только закрепленные посты"""
-#     posts = Post.objects.pinned_posts()
-#     serializer = PostListSerializer(
-#         posts,
-#         many=True,
-#         context={'request': request}
-#     )
-#     return Response({
-#         'count': posts.count(),
-#         'results': serializer.data
-#     })
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def pinned_posts_only(request):
+    """Только закрепленные посты"""
+    posts = Post.objects.pinned_posts()
+    serializer = PostListSerializer(
+        posts,
+        many=True,
+        context={'request': request}
+    )
+    return Response({
+        'count': posts.count(),
+        'results': serializer.data
+    })
 
 
-# @api_view(['GET'])
-# @permission_classes([permissions.AllowAny])
-# def featured_posts(request):
-#     """
-#     Рекомендуемые посты для главной страницы:
-#     - Закрепленные посты (максимум 3)
-#     - Популярные посты за последнюю неделю
-#     """
-#     from django.utils import timezone
-#     from datetime import timedelta
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def featured_posts(request):
+    """
+    Рекомендуемые посты для главной страницы:
+    - Закрепленные посты (максимум 3)
+    - Популярные посты за последнюю неделю
+    """
+    from django.utils import timezone
+    from datetime import timedelta
     
-#     # Получаем последние 3 закрепленных поста
-#     pinned_posts = Post.objects.pinned_posts()[:3]
+    # Получаем последние 3 закрепленных поста
+    pinned_posts = Post.objects.pinned_posts()[:3]
     
-#     # Получаем популярные посты за неделю (исключая уже закрепленные)
-#     week_ago = timezone.now() - timedelta(days=7)
-#     popular_posts = Post.objects.with_subscription_info().filter(
-#         status='published',
-#         created_at__gte=week_ago
-#     ).exclude(
-#         id__in=[post.id for post in pinned_posts]
-#     ).order_by('-views_count')[:6]
+    # Получаем популярные посты за неделю (исключая уже закрепленные)
+    week_ago = timezone.now() - timedelta(days=7)
+    popular_posts = Post.objects.with_subscription_info().filter(
+        status='published',
+        created_at__gte=week_ago
+    ).exclude(
+        id__in=[post.id for post in pinned_posts]
+    ).order_by('-views_count')[:6]
     
-#     # Сериализуем данные
-#     pinned_serializer = PostListSerializer(
-#         pinned_posts, 
-#         many=True, 
-#         context={'request': request}
-#     )
-#     popular_serializer = PostListSerializer(
-#         popular_posts, 
-#         many=True, 
-#         context={'request': request}
-#     )
+    # Сериализуем данные
+    pinned_serializer = PostListSerializer(
+        pinned_posts, 
+        many=True, 
+        context={'request': request}
+    )
+    popular_serializer = PostListSerializer(
+        popular_posts, 
+        many=True, 
+        context={'request': request}
+    )
     
-#     return Response({
-#         'pinned_posts': pinned_serializer.data,
-#         'popular_posts': popular_serializer.data,
-#         'total_pinned': Post.objects.pinned_posts().count()
-#     })
+    return Response({
+        'pinned_posts': pinned_serializer.data,
+        'popular_posts': popular_serializer.data,
+        'total_pinned': Post.objects.pinned_posts().count()
+    })
 
-# @api_view(['POST'])
-# @permission_classes([permissions.IsAuthenticated])
-# def toggle_post_pin_status(request, slug):
-#     """
-#     Переключает статус закрепления поста.
-#     Если пост закреплен - открепляет, если не закреплен - закрепляет.
-#     """
-#     post = get_object_or_404(Post, slug=slug, author=request.user, status='published')
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def toggle_post_pin_status(request, slug):
+    """
+    Переключает статус закрепления поста.
+    Если пост закреплен - открепляет, если не закреплен - закрепляет.
+    """
+    post = get_object_or_404(Post, slug=slug, author=request.user, status='published')
     
-#     # Проверяем подписку
-#     if not hasattr(request.user, 'subscription') or not request.user.subscription.is_active:
-#         return Response({
-#             'error': 'Active subscription required to pin posts'
-#         }, status=status.HTTP_403_FORBIDDEN)
+    # Проверяем подписку
+    if not hasattr(request.user, 'subscription') or not request.user.subscription.is_active:
+        return Response({
+            'error': 'Active subscription required to pin posts'
+        }, status=status.HTTP_403_FORBIDDEN)
     
-#     try:
-#         from apps.subscribe.models import PinnedPost
+    try:
+        from apps.subscribe.models import PinnedPost
         
-#         # Проверяем, закреплен ли пост
-#         if post.is_pinned:
-#             # Открепляем
-#             post.pin_info.delete()
-#             message = 'Post unpinned successfully'
-#             is_pinned = False
-#         else:
-#             # Удаляем существующий закрепленный пост пользователя, если есть
-#             if hasattr(request.user, 'pinned_post'):
-#                 request.user.pinned_post.delete()
+        # Проверяем, закреплен ли пост
+        if post.is_pinned:
+            # Открепляем
+            post.pin_info.delete()
+            message = 'Post unpinned successfully'
+            is_pinned = False
+        else:
+            # Удаляем существующий закрепленный пост пользователя, если есть
+            if hasattr(request.user, 'pinned_post'):
+                request.user.pinned_post.delete()
             
-#             # Закрепляем новый пост
-#             PinnedPost.objects.create(user=request.user, post=post)
-#             message = 'Post pinned successfully'
-#             is_pinned = True
+            # Закрепляем новый пост
+            PinnedPost.objects.create(user=request.user, post=post)
+            message = 'Post pinned successfully'
+            is_pinned = True
         
-#         return Response({
-#             'message': message,
-#             'is_pinned': is_pinned,
-#             'post': PostDetailSerializer(post, context={'request': request}).data
-#         })
+        return Response({
+            'message': message,
+            'is_pinned': is_pinned,
+            'post': PostDetailSerializer(post, context={'request': request}).data
+        })
         
-#     except Exception as e:
-#         return Response({
-#             'error': str(e)
-#         }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
