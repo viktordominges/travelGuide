@@ -172,7 +172,7 @@ class PaymentService:
             user=user,
             subscription=subscription,
             amount=plan.price,
-            currency='USD',
+            currency='EUR',
             description=f'Subscription to {plan.name}',
             payment_method='stripe'
         )
