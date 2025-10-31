@@ -5,7 +5,9 @@ from django.urls import reverse
 
 
 class Category(models.Model):
-    """Модель категории для постов блога."""
+    """
+    Модель категории для постов блога.
+    """
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
@@ -28,7 +30,8 @@ class Category(models.Model):
 
 class PostManager(models.Manager):
     """Менеджер для модели Post с дополнительными методами"""
-    def pusblished(self):
+
+    def published(self):
         return self.filter(status='published')
     
     def pinned_posts(self):
@@ -39,7 +42,7 @@ class PostManager(models.Manager):
             pin_info__user__subscription__end_date__gt=models.functions.Now(),
             status='published'
         ).select_related(
-            'pin_info', 'pin_info__user', 'pin_info__user__subcription'
+            'pin_info', 'pin_info__user', 'pin_info__user__subscription'
         ).order_by('pin_info__pinned_at')
     
     def regular_posts(self):
@@ -51,10 +54,30 @@ class PostManager(models.Manager):
         return self.select_related(
             'author', 'author__subscription', 'category'
         ).prefetch_related('pin_info')
+        
+    def get_posts_for_feed(self):
+        """Возвращает посты с закрепленными первыми"""
+        from django.db.models import Case, When, Value, BooleanField
+        from django.utils import timezone
+        
+        return self.annotate(
+            is_pinned_flag=Case(
+                When(
+                    pin_info__isnull=False,
+                    pin_info__user__subscription__status='active',
+                    pin_info__user__subscription__end_date__gt=timezone.now(),
+                    then=Value(True)
+                ),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        ).order_by('-is_pinned_flag', '-created_at')
 
 
 class Post(models.Model):
-    """Модель поста блога c поддержкой закрепления."""
+    """
+    Модель поста блога c поддержкой закрепления.
+    """
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('published', 'Published'),

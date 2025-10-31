@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.utils.text import slugify
 from .models import Category, Post
-
+ 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категорий"""
@@ -19,7 +19,6 @@ class CategorySerializer(serializers.ModelSerializer):
         validated_data['slug'] = slugify(validated_data['name'])
         return super().create(validated_data)
     
-
 class PostListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка постов"""
     author = serializers.StringRelatedField()
@@ -89,7 +88,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return obj.get_pinned_info()
     
     def get_can_pin(self, obj):
-        """Проверяет, может ли текущий пользователь закрпить пост"""
+        """Проверяет, может ли текущий пользователь закрепить пост"""
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
             return False

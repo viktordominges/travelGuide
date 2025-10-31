@@ -1,85 +1,136 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+  <div id="app" class="min-h-screen bg-gray-50">
+    <!-- Навигация -->
+    <AppHeader />
+    
+    <!-- Основной контент -->
+    <main class="min-h-screen">
+      <router-view v-slot="{ Component, route }">
+        <transition
+          :name="getTransitionName(route)"
+          mode="out-in"
+          appear
+        >
+          <component :is="Component" :key="route.path" />
+        </transition>
+      </router-view>
+    </main>
+    
+    <!-- Футер -->
+    <AppFooter />
+    
+    <!-- Loading overlay -->
+    <div
+      v-if="isGlobalLoading"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div class="loading-spinner"></div>
+        <span class="text-gray-600">Загрузка...</span>
+      </div>
     </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
 
+<script>
+import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useSubscriptionStore } from '@/stores/subscription' // Добавить
+import AppHeader from '@/components/layout/AppHeader.vue'
+import AppFooter from '@/components/layout/AppFooter.vue'
+
+export default {
+  name: 'App',
+  components: {
+    AppHeader,
+    AppFooter
+  },
+  setup() {
+    const authStore = useAuthStore()
+    const subscriptionStore = useSubscriptionStore() // Добавить
+    const isInitializing = ref(true)
+    
+    const isGlobalLoading = computed(() => {
+      return isInitializing.value && !authStore.isInitialized
+    })
+    
+    const getTransitionName = (route) => {
+      if (route.meta?.transition) {
+        return route.meta.transition
+      }
+      
+      if (route.name === 'PostDetail') {
+        return 'slide-up'
+      }
+      
+      if (route.name === 'Login' || route.name === 'Register') {
+        return 'fade'
+      }
+      
+      return 'fade'
+    }
+    
+    onMounted(async () => {
+      try {
+        await authStore.initializeAuth()
+        
+        // Если пользователь авторизован, загружаем статус подписки
+        if (authStore.isAuthenticated) {
+          subscriptionStore.fetchSubscriptionStatus()
+        }
+      } catch (error) {
+        console.error('Ошибка инициализации приложения:', error)
+      } finally {
+        isInitializing.value = false
+      }
+    })
+    
+    return {
+      isGlobalLoading,
+      getTransitionName
+    }
+  }
+}
+</script>
+
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+/* Переходы между страницами */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+.slide-up-enter-active {
+  transition: all 0.3s ease-out;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+.slide-up-leave-active {
+  transition: all 0.3s cubic-bezier(1.0, 0.5, 0.8, 1.0);
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(20px);
+  opacity: 0;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease;
 }
 
-nav a:first-of-type {
-  border: 0;
+.slide-right-enter-from {
+  transform: translateX(20px);
+  opacity: 0;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.slide-right-leave-to {
+  transform: translateX(-20px);
+  opacity: 0;
 }
 </style>
